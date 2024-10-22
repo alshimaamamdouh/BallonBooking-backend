@@ -14,6 +14,7 @@ const orderRoutes = require('./routes/orderRoute');
 const cartRoutes = require('./routes/cartRoute');
 const wishListRoutes = require('./routes/wishListRoute');
 const currencyRoutes = require('./routes/currencyRoute');
+const userRoutes = require('./routes/userRoute');
 
 // Initialize app
 const app = express();
@@ -36,6 +37,7 @@ app.use(`/${apiVersion}/orders`, orderRoutes);
 app.use(`/${apiVersion}/cart`, cartRoutes);
 app.use(`/${apiVersion}/wishlist`, wishListRoutes);
 app.use(`/${apiVersion}/currency`, currencyRoutes);
+app.use(`/${apiVersion}/user`, userRoutes);
 
 // Start the server
 const PORT = process.env.PORT;

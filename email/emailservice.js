@@ -3,10 +3,14 @@ const nodemailer = require('nodemailer');
 // Create a transporter object using SMTP transport
 const transporter = nodemailer.createTransport({
   service: 'Gmail', 
+  // auth: {
+  //   user: 'bkngadventure@gmail.com', //  email
+  //   pass: 'asmaaalshimaadoaanada' //  app password
+  // }
   auth: {
-    user: 'bkngadventure@gmail.com', //  email
-    pass: 'asmaaalshimaadoaanada' //  app password
-  }
+    user: 'booking.online.alx@gmail.com', //  email
+    pass: 'glbg hlkl mlts urat' //  app password
+  }
 });
 
 // Function to send an email

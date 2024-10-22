@@ -56,7 +56,7 @@ router.delete('/:code', async (req, res) => {
     if (!currency) {
       return res.status(404).send({ error: 'Currency not found' });
     }
-    res.status(204).send();
+    res.status(204).send({details :"Record is deleted successfully"});
   } catch (error) {
     res.status(500).send({ error: 'Failed to delete currency', details: error.message });
   }

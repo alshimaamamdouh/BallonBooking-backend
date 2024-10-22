@@ -1,5 +1,6 @@
 const express = require('express');
 const Order = require('../models/Order');
+const User = require('../models/User');
 const router = express.Router();
 const sendEmail = require('../email/emailservice');
 
@@ -8,14 +9,15 @@ router.post('/', async (req, res) => {
   try {
     const order = new Order(req.body);
     await order.save();
-
+    const user = await User.findById(req.body.user);
+    if (!user) throw new Error('User not found');
     // Send confirmation email
-    const { email } = req.body; // Email of the user placing the order
+    // const { email } = user.email; // Email of the user placing the order
     const subject = 'Order Confirmation';
     const text = `Thank you for your order. Your order number is ${order.orderNumber}.`;
     const html = `<p>Thank you for your order. Your order number is <strong>${order.orderNumber}</strong>.</p>`;
     
-    await sendEmail(email, subject, text, html);
+    await sendEmail(user.email, subject, text, html);
     
     res.status(201).send(order);
   } catch (error) {

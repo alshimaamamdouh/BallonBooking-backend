@@ -7,4 +7,5 @@ const balloonScheduleSchema = new mongoose.Schema({
   seatsAvailable: { type: Number, required: true }
 });
 
+
 module.exports = mongoose.model('BalloonSchedule', balloonScheduleSchema);

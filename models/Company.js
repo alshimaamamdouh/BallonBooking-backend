@@ -6,4 +6,6 @@ const companySchema = new mongoose.Schema({
   description: { type: String }
 });
 
+
+
 module.exports = mongoose.model('Company', companySchema);

@@ -1,8 +1,19 @@
 const mongoose = require('mongoose');
 
 const companySchema = new mongoose.Schema({
+  code: { type: String, required: true , unique: true },
   name: { type: String, required: true },
   logo: { type: String },  // URL 
+  location: [
+    {
+      street: { type: String },
+      city: { type: String },
+      state: { type: String },
+      zip: { type: String },
+      lat: { type: Number },
+      lng: { type: Number }
+    }
+  ],
   description: { type: String }
 });
 

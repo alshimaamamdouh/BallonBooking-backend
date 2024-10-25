@@ -10,6 +10,8 @@ const balloonRideSchema = new mongoose.Schema({
   discount: { type: Number, default: 0 },   
   currency: { type: mongoose.Schema.Types.ObjectId, ref: 'Currency', required: true }, // Ref to Currency model
   isAvailable: { type: Boolean, default: true },
+  adultPrice: { type: Number, required: true, min: 0 },
+  childPrice: { type: Number, required: true, min: 0 },
   imageUrl: {type: String },
   imageUrls: [ { type: String, }],
   public_id: {type: String },

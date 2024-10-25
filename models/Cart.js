@@ -11,8 +11,6 @@ const cartSchema = new mongoose.Schema({
       schedule: { type: mongoose.Schema.Types.ObjectId, ref: 'BalloonSchedule' },
       adult: { type: Number, required: true, min: 0},
       child: { type: Number, required: true, min: 0 },
-      adultPrice: { type: Number, required: true, min: 0 },
-      childPrice: { type: Number, required: true, min: 0 },
       totalPrice: { type: Number, default: 0 }, // Total price for the item
       currency: { type: mongoose.Schema.Types.ObjectId, ref: 'Currency' }, // Reference to the Currency model
     }
@@ -44,11 +42,11 @@ cartSchema.pre('save', async function (next) {
         }
 
         // Calculate the price after discount
-        const discountAmountAdult = (item.adultPrice * balloonRide.discount) / 100;
-        const discountedPriceAdult = item.adultPrice - discountAmountAdult;
+        const discountAmountAdult = (balloonRide.adultPrice * balloonRide.discount) / 100;
+        const discountedPriceAdult = balloonRide.adultPrice - discountAmountAdult;
 
-        const discountAmountChild = (item.childPrice * balloonRide.discount) / 100;
-        const discountedPriceChild = item.childPrice - discountAmountChild;
+        const discountAmountChild = (balloonRide.childPrice * balloonRide.discount) / 100;
+        const discountedPriceChild = balloonRide.childPrice - discountAmountChild;
         
         item.totalPrice = ((discountedPriceAdult * item.adult) + (discountedPriceChild * item.child)) * currency.exchangeRate;
       }

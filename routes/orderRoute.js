@@ -28,7 +28,8 @@ router.post('/', async (req, res) => {
 // GET: Get all orders
 router.get('/', async (req, res) => {
   try {
-    const orders = await Order.find().populate('user service ride schedule');
+    // const orders = await Order.find().populate('user service ride schedule');
+    const orders = await Order.find();
     res.status(200).send(orders);
   } catch (error) {
     res.status(500).send({ error: 'Failed to retrieve orders', details: error.message });

@@ -20,10 +20,11 @@ const promotionRoutes = require('./routes/promotionRoute');
 // Initialize app
 const app = express();
 
-app.use(cors());
+
 
 // Middleware
 app.use(bodyParser.json());
+app.use(cors());
 
 // Connect to MongoDB
 connectDB();

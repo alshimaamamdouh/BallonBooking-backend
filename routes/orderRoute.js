@@ -31,7 +31,9 @@ router.get('/', async (req, res) => {
     
       const orders = await Order.find()
       .populate('user')  
-      .populate({path: 'cart', populate: { path: 'items.service' }  });
+      .populate({ 
+        path: 'cart', 
+        populate: [{ path: 'items.service' }, { path: 'items.currency' } ]   });
     res.status(200).send(orders);
   } catch (error) {
     res.status(500).send({ error: 'Failed to retrieve orders', details: error.message });
@@ -41,7 +43,12 @@ router.get('/', async (req, res) => {
 // GET: Get orders by user ID
 router.get('/user/:userId', async (req, res) => {
   try {
-    const orders = await Order.find({ user: req.params.userId });
+    const userId = req.params.userId;
+    const orders = await Order.find({ user: userId })
+    .populate('user')  
+    .populate({ 
+      path: 'cart', 
+      populate: [{ path: 'items.service' }, { path: 'items.currency' } ]   });
     res.status(200).send(orders);
   } catch (error) {
     res.status(500).send({ error: 'Failed to retrieve orders for user', details: error.message });

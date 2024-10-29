@@ -1,5 +1,5 @@
 const express = require('express');
-const Wishlist = require('../models/Wishlist');
+const Wishlist = require('../models/WishList');
 const router = express.Router();
 
 // POST: Add items to wishlist

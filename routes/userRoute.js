@@ -81,7 +81,7 @@ router.get('/profile', authMiddleware, async (req, res) => {
 });
 
 // protected - Get all users
-router.get('/',  async (req, res) => {
+router.get('/', authMiddleware,  async (req, res) => {
   try {
     const users = await User.find().select('-passwordHash'); // Exclude password
     res.send(users);

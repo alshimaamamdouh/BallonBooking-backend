@@ -34,10 +34,10 @@ router.get('/schedule/:rideId', async (req, res) => {
 });
 
 // GET: Get schedule by date
-router.get('/schedule/:date', async (req, res) => {
+router.get('/schedule_date/:date', async (req, res) => {
   try {
 
-    const dateStr = req.body.date;//'2024-10-31' YYYY-MM-DD format
+    const dateStr = req.params.date;//'2024-10-31' YYYY-MM-DD format
     
     // Convert string to Date object
     const date = new Date(dateStr);

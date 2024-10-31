@@ -2,7 +2,8 @@ const mongoose = require('mongoose');
 
 const balloonScheduleSchema = new mongoose.Schema({
   balloonRide: { type: mongoose.Schema.Types.ObjectId, ref: 'BalloonRide', required: true },
-  date: { type: Date, required: true },
+  date: { type: Date },
+  day: {type: String, required: true},
   startTime: {
     hours: { type: Number, required: true, min: 0, max: 23 },
     minutes: { type: Number, required: true, min: 0, max: 59 },

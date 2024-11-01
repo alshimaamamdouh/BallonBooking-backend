@@ -17,6 +17,8 @@ const cartSchema = new mongoose.Schema({
   ]
 });
 
+cartSchema.index({ user: 1 }); // Index for faster querying by user
+
 // Middleware to calculate total price before saving the cart
 cartSchema.pre('save', async function (next) {
   const cart = this;

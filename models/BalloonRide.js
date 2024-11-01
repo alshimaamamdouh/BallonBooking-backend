@@ -2,7 +2,10 @@ const mongoose = require('mongoose');
 
 const balloonRideSchema = new mongoose.Schema({
   title: { type: String, required: true },
-  location: { type: Array , required: true },
+  location: { 
+    type: { type: String, enum: ['Point'], required: true },
+    coordinates: { type: [Number], required: true }
+   },
   price: { type: Number, required: true },
   description: { type: String },
   seatsAvailable: { type: Number, required: true },
@@ -19,5 +22,6 @@ const balloonRideSchema = new mongoose.Schema({
   company: { type: mongoose.Schema.Types.ObjectId, ref: 'Company', required: true }  
 });
 
+balloonRideSchema.index({ location: '2dsphere' }); // Index for geospatial queries
 
 module.exports = mongoose.model('BalloonRide', balloonRideSchema);

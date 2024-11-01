@@ -56,6 +56,45 @@ router.get('/schedule_date/:date', async (req, res) => {
   }
 });
 
+
+// GET: Get schedule by date, time
+router.get('/check', async (req, res) => {
+  try {
+
+    const dateStr = req.query.date;//'2024-10-31' YYYY-MM-DD format
+    
+    // Convert string to Date object
+    const date = new Date(dateStr);
+
+    // Get the day of the week (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
+    const dayOfWeek = date.getDay();
+
+    // Map day number to day name
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const dayName = days[dayOfWeek];
+    const from = req.query.f_time; // h:m
+    const to = req.query.t_time; // h:m
+    
+    const f_hour = parseInt(from.split(':')[0], 10);
+    const f_min = parseInt(from.split(':')[1], 10);
+
+    const t_hour = parseInt(to.split(':')[0], 10);
+    const t_min = parseInt(to.split(':')[1], 10);
+    
+    const schedules = await BalloonSchedule.find({ day: dayName ,"startTime.hours": f_hour,
+                                                                "startTime.minutes": f_min ,
+                                                                "endTime.hours": t_hour ,
+                                                                "endTime.minutes": t_min  });
+    if(schedules.length == 0)
+    {
+      return res.status(200).send({'message':"Not Available"});
+    }
+    return res.status(200).send({'message':"Available"});
+  } catch (error) {
+    res.status(500).send({ error: 'Failed to retrieve schedules by Date', details: error.message });
+  }
+});
+
 // PUT: Update a schedule by ID
 router.put('/:id', async (req, res) => {
   try {

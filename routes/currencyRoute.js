@@ -1,6 +1,9 @@
 const express = require('express');
 const Currency = require('../models/Currency');
-const router = express.Router();
+const axios = require('axios');
+const router = express.Router(); 
+const exchangeRate = require('../functions/exchangeRate');
+
 
 // POST: Add a new currency
 router.post('/', async (req, res) => {
@@ -60,6 +63,16 @@ router.delete('/:code', async (req, res) => {
   } catch (error) {
     res.status(500).send({ error: 'Failed to delete currency', details: error.message });
   }
+});
+
+
+
+
+// Endpoint to get exchange rates
+router.get('/exchange-rate/:currency', async (req, res) => {
+    const { currency } = req.params; // Example: 'USD'
+    const rate = await exchangeRate(currency);
+    res.status(200).json({ message: String(rate) });
 });
 
 module.exports = router;

@@ -6,12 +6,11 @@ const companySchema = new mongoose.Schema({
   logo: { type: String },  // URL 
   location: [
     {
-      street: { type: String },
-      city: { type: String },
-      state: { type: String },
-      zip: { type: String },
-      lat: { type: Number },
-      lng: { type: Number }
+    street: { type: String },
+    city: { type: String },
+    state: { type: String },
+    zip: { type: String },
+    coordinates: { type: [Number] }
     }
   ],
   description: { type: String }

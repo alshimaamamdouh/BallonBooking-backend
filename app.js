@@ -17,6 +17,7 @@ const wishListRoutes = require('./routes/wishListRoute');
 const currencyRoutes = require('./routes/currencyRoute');
 const userRoutes = require('./routes/userRoute');
 const promotionRoutes = require('./routes/promotionRoute');
+const uploadRoutes = require('./routes/uploadRoutes');
 // Initialize app
 const app = express();
 
@@ -45,6 +46,8 @@ app.use(`/${apiVersion}/wishlist`, wishListRoutes);
 app.use(`/${apiVersion}/currency`, currencyRoutes);
 app.use(`/${apiVersion}/user`, userRoutes);
 app.use(`/${apiVersion}/promotion`, promotionRoutes);
+app.use(`/${apiVersion}/upload`, uploadRoutes);
+
 // Start the server
 const PORT = process.env.PORT;
 app.listen(PORT, () => {

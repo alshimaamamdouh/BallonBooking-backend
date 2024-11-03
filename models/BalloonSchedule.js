@@ -30,7 +30,7 @@ module.exports = mongoose.model('BalloonSchedule', balloonScheduleSchema);
 
 
 // pre save 
-balloonScheduleSchema.pre('save', async function (next){
+balloonScheduleSchema.post('save', async function (next){
 
   try{
     const ride = await BalloonRide.findById(this.balloonRide);

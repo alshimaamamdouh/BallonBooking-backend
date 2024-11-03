@@ -16,7 +16,7 @@ const balloonScheduleSchema = new mongoose.Schema({
     seconds: { type: Number, required: false, min: 0, max: 59 } // Optional field
   },
   timeZone: { type: String, required: true },
-  totalSeats: { type: Number, required: true }, // Initial total seats for the ride
+  totalSeats: { type: Number }, // Initial total seats for the ride
   bookedSeats: { type: Number, default: 0 } // Track booked seats over time
 });
 

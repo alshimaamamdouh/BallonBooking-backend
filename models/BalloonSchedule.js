@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const BalloonRide = require('./BalloonRide');
+const BalloonRide = require('./BalloonRide'); // Assuming BalloonRide model is in the same directory
 
 const balloonScheduleSchema = new mongoose.Schema({
   balloonRide: { type: mongoose.Schema.Types.ObjectId, ref: 'BalloonRide', required: true },
@@ -16,7 +16,7 @@ const balloonScheduleSchema = new mongoose.Schema({
     seconds: { type: Number, required: false, min: 0, max: 59 } // Optional field
   },
   timeZone: { type: String, required: true },
-  totalSeats: { type: Number }, // Initial total seats for the ride
+  totalSeats: { type: Number }, // Will be set from BalloonRide.seatsAvailable
   bookedSeats: { type: Number, default: 0 } // Track booked seats over time
 });
 
@@ -25,30 +25,21 @@ balloonScheduleSchema.virtual('emptySeats').get(function () {
   return this.totalSeats - this.bookedSeats;
 });
 
-module.exports = mongoose.model('BalloonSchedule', balloonScheduleSchema);
-
-
-
-// pre save 
-balloonScheduleSchema.post('save', async function (next){
-
-  try{
-    const ride = await BalloonRide.findById(this.balloonRide);
-    if(ride)
-    {
-
-      this.totalSeats = ride.seatsAvailable;
-    }
-    else{
-      throw new Error('BalloonRide not found');
-    }
-
+// Pre-save 
+balloonScheduleSchema.pre('save', async function (next) {
+  try {
+  
+      const ride = await BalloonRide.findById(this.balloonRide);
+      if (ride) {
+        this.totalSeats = ride.seatsAvailable;
+      } else {
+        throw new Error('BalloonRide not found');
+      }
+    
     next();
-  }
-  catch(error){
-
+  } catch (error) {
     next(error);
   }
-
-
 });
+
+module.exports = mongoose.model('BalloonSchedule', balloonScheduleSchema);

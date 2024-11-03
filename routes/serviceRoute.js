@@ -80,6 +80,31 @@ router.put('/:id', async (req, res) => {
   }
 });
 
+// PUT: Update a service with image 
+router.put('/updateImage/:id', async (req, res) => {
+  try {
+    
+    const public_ids = req.body.public_ids ? (Array.isArray(req.body.public_ids) ? req.body.public_ids : JSON.parse(req.body.public_ids)) : undefined;
+    const imageUrls = req.body.imageUrls ? (Array.isArray(req.body.imageUrls) ? req.body.imageUrls : JSON.parse(req.body.imageUrls)) : undefined;
+
+    
+    const updatedData = {
+      ...req.body,
+      ...(public_ids !== undefined && { public_ids }),  
+      ...(imageUrls !== undefined && { imageUrls }),    
+    };
+
+    const service = await Service.findByIdAndUpdate(req.params.id, updatedData, { new: true });
+    if (!service) {
+      return res.status(404).send({ error: 'Service not found' });
+    }
+    
+    res.status(200).send(service);
+  } catch (error) {
+    res.status(400).send({ error: 'Failed to update service', details: error.message });
+  }
+});
+
 // DELETE: Delete a service by ID
 router.delete('/:id', async (req, res) => {
   try {

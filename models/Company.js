@@ -3,14 +3,16 @@ const mongoose = require('mongoose');
 const companySchema = new mongoose.Schema({
   code: { type: String, required: true , unique: true },
   name: { type: String, required: true },
-  logo: { type: String },  // URL 
+  logo: { type: String }, 
+  publicId: { type: String }, 
   location: [
     {
     street: { type: String },
     city: { type: String },
-    state: { type: String },
+    country: { type: String },
     zip: { type: String },
-    coordinates: { type: [Number] }
+    type: { type: String, enum: ['Point'], required: true },
+    coordinates: { type: [Number], required: true }
     }
   ],
   description: { type: String }

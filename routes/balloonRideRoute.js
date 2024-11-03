@@ -13,6 +13,32 @@ router.post('/', async (req, res) => {
   }
 });
 
+// Create a service
+router.post('/rideImage', async (req, res) => {
+  try {
+      
+      const public_ids = req.body.public_ids ? (Array.isArray(req.body.public_ids) ? req.body.public_ids : JSON.parse(req.body.public_ids)) : [];
+      const imageUrls = req.body.imageUrls ? (Array.isArray(req.body.imageUrls) ? req.body.imageUrls : JSON.parse(req.body.imageUrls)) : [];
+      
+      const newBalloonRide = {
+          ...req.body,  
+          public_ids: public_ids,
+          imageUrls: imageUrls,  
+      };
+
+      const balloonRide = new BalloonRide(newBalloonRide);
+      const savedballoonRide = await balloonRide.save();
+      
+      
+      res.status(201).json(savedballoonRide);
+  } catch (error) {
+      
+      res.status(400).json({ message: error.message });
+  }
+});
+
+
+
 // GET: Get all balloon rides
 router.get('/', async (req, res) => {
   try {

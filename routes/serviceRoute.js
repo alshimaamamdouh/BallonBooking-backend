@@ -13,6 +13,37 @@ router.post('/', async (req, res) => {
   }
 });
 
+// Create a service
+router.post('/serviceImage', async (req, res) => {
+  try {
+      
+      const public_ids = req.body.public_ids ? (Array.isArray(req.body.public_ids) ? req.body.public_ids : JSON.parse(req.body.public_ids)) : [];
+      const imageUrls = req.body.imageUrls ? (Array.isArray(req.body.imageUrls) ? req.body.imageUrls : JSON.parse(req.body.imageUrls)) : [];
+      
+      
+      // Create a new object with parsed data
+      const newService = {
+          ...req.body,  
+          public_ids: public_ids,
+          imageUrls: imageUrls,  
+      };
+
+      
+      
+      const service = new Service(newService);
+      
+      
+      const savedservice = await service.save();
+      
+      // Return the newly created menu item
+      res.status(201).json(savedservice);
+  } catch (error) {
+      
+      res.status(400).json({ message: error.message });
+  }
+});
+
+
 // GET: Get all services
 router.get('/', async (req, res) => {
   try {

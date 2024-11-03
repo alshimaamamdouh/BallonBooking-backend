@@ -76,8 +76,8 @@ router.get('/exchange-rate/:currency', async (req, res) => {
 });
 
 // Endpoint to get exchange rates
-router.get('/allCodes', async (req, res) => {
-  const codes = await currencyCode();
+router.get('/all/codes', async (req, res) => {
+  const codes = await currencyCodes();
   res.status(200).json({ message: (codes) });
 });
 

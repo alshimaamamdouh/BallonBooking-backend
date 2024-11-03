@@ -52,7 +52,6 @@ cartSchema.pre('save', async function (next) {
         const discountedPriceChild = balloonRide.childPrice - discountAmountChild;
         const { currencyCode } = currency.code; // Example: 'USD'
         const rate = await exchangeRate(currencyCode);
-        res.status(200).json({ message: String(rate) });
         item.totalPrice = ((discountedPriceAdult * item.adult) + (discountedPriceChild * item.child)) * rate;
       }
     }

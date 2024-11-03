@@ -3,7 +3,7 @@ const Currency = require('../models/Currency');
 const axios = require('axios');
 const router = express.Router(); 
 const exchangeRate = require('../functions/exchangeRate');
-
+const currencyCodes = require('../functions/currencyCodes');
 
 // POST: Add a new currency
 router.post('/', async (req, res) => {
@@ -73,6 +73,12 @@ router.get('/exchange-rate/:currency', async (req, res) => {
     const { currency } = req.params; // Example: 'USD'
     const rate = await exchangeRate(currency);
     res.status(200).json({ message: String(rate) });
+});
+
+// Endpoint to get exchange rates
+router.get('/allCodes', async (req, res) => {
+  const codes = await currencyCode();
+  res.status(200).json({ message: (codes) });
 });
 
 module.exports = router;

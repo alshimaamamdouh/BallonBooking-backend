@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const BalloonSchedule = require('./BalloonSchedule'); // Assuming the Service model is in the same directory
 const Currency = require('./Currency'); // Assuming the Currency model is in the same directory
 const BalloonRide = require('./BalloonRide');
+const exchangeRate = require('../functions/exchangeRate');
 
 const cartSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -49,8 +50,10 @@ cartSchema.pre('save', async function (next) {
 
         const discountAmountChild = (balloonRide.childPrice * balloonRide.discount) / 100;
         const discountedPriceChild = balloonRide.childPrice - discountAmountChild;
-        
-        item.totalPrice = ((discountedPriceAdult * item.adult) + (discountedPriceChild * item.child)) * currency.exchangeRate;
+        const { currencyCode } = currency.code; // Example: 'USD'
+        const rate = await exchangeRate(currencyCode);
+        res.status(200).json({ message: String(rate) });
+        item.totalPrice = ((discountedPriceAdult * item.adult) + (discountedPriceChild * item.child)) * rate;
       }
     }
 

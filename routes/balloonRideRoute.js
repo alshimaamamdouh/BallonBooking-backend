@@ -19,9 +19,10 @@ router.post('/rideImage', async (req, res) => {
       
       const public_ids = req.body.public_ids ? (Array.isArray(req.body.public_ids) ? req.body.public_ids : JSON.parse(req.body.public_ids)) : [];
       const imageUrls = req.body.imageUrls ? (Array.isArray(req.body.imageUrls) ? req.body.imageUrls : JSON.parse(req.body.imageUrls)) : [];
-      
+      const location  =  req.body.location ? JSON.parse(req.body.location) : {};
       const newBalloonRide = {
           ...req.body,  
+          location: location,
           public_ids: public_ids,
           imageUrls: imageUrls,  
       };

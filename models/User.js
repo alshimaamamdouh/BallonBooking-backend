@@ -29,5 +29,19 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
+userSchema.pre('findByIdAndDelete', async function (next) {
+  const references = [
+    { model: mongoose.model('Cart'), field: 'user' },
+    { model: mongoose.model('Order'), field: 'user' },
+    { model: mongoose.model('Wishlist'), field: 'user' }
+  ];
+
+  const isReferenced = await isDocumentReferenced(this._id, references);
+  if (isReferenced) {
+    return next(new Error('Cannot delete: User is referenced in other collections.'));
+  }
+
+  next();
+});
 module.exports = mongoose.model('User', userSchema);
 

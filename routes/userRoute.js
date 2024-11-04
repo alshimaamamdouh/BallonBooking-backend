@@ -1,9 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
+const WishList = require('../models/WishList');
+const Cart = require('../models/Cart');
+const Order = require('../models/Order');
 const bcrypt = require('bcryptjs'); // encryption for password
 const jwt = require('jsonwebtoken');
 const authMiddleware = require('../middleware/auth'); //  auth middleware
+const isDocumentReferenced = require('../functions/isDocumentReferenced');
 
 // public - Register a user
 router.post('/register', async (req, res) => {
@@ -93,6 +97,17 @@ router.get('/', authMiddleware,  async (req, res) => {
 // protected - Delete a user
 router.delete('/:userId', authMiddleware, async (req, res) => {
   try {
+    const references = [
+      { model: WishList, field: 'user' },
+      { model: Cart, field: 'user' },
+      { model: Order, field: 'user' }
+    ];
+ 
+    const id_ = req.params.userId;
+    const isReferenced = await isDocumentReferenced(id_, references);
+    if (isReferenced) {
+      return res.status(404).send({ error: 'Cannot delete: User is referenced in other collections(WishList Or Cart Or Order).'});
+  }
     const user = await User.findByIdAndDelete(req.params.userId);
     if (!user) return res.status(404).send('User not found');
     res.send('User deleted');

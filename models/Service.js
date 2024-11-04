@@ -8,6 +8,7 @@ const serviceSchema = new mongoose.Schema({
   imageUrls: [ { type: String, }],
   public_id: {type: String },
   public_ids: [{ type: String }],
+  company: { type: mongoose.Schema.Types.ObjectId, ref: 'Company', required: true }  
 });
 
 

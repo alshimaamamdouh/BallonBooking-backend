@@ -4,8 +4,7 @@ const wishlistSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   items: [
     {
-      service: { type: mongoose.Schema.Types.ObjectId, ref: 'Service' },
-      ride: { type: mongoose.Schema.Types.ObjectId, ref: 'BalloonRide' },
+      balloonRide: { type: mongoose.Schema.Types.ObjectId, ref: 'BalloonRide' },
       addedAt: { type: Date, default: Date.now }
     }
   ]

@@ -42,4 +42,20 @@ balloonScheduleSchema.pre('save', async function (next) {
   }
 });
 
+balloonScheduleSchema.pre('findOneAndDelete', async function (next) {
+  const references = [
+    { model: mongoose.model('Cart'), field: 'schedule' }
+  ];
+  const model_ = await this.model.findOne({'code': this.getFilter().code});
+  if(model_){
+    const id_ = model_._id;
+    const isReferenced = await isDocumentReferenced(id_, references);
+    if (isReferenced) {
+      return next(new Error('Cannot delete: Balloon schedule is referenced in other collections(Cart).'));
+  }
+  return next(new Error('Cannot delete: Balloon schedule is not found'));
+  }
+
+  next();
+});
 module.exports = mongoose.model('BalloonSchedule', balloonScheduleSchema);

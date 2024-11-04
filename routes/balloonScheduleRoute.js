@@ -1,5 +1,7 @@
 const express = require('express');
 const BalloonSchedule = require('../models/BalloonSchedule');
+const Cart = require('../models/Cart');
+const isDocumentReferenced = require('../functions/isDocumentReferenced');
 const router = express.Router();
 
 // POST: Add a balloon schedule
@@ -108,7 +110,18 @@ router.put('/:id', async (req, res) => {
 // DELETE: Delete a schedule by ID
 router.delete('/:id', async (req, res) => {
   try {
-    await BalloonSchedule.findByIdAndDelete(req.params.id);
+    const references = [
+      { model: Cart, field: 'balloonSchedule' }
+    ];
+      const id_ = req.params.id;
+      const isReferenced = await isDocumentReferenced(id_, references);
+      if (isReferenced) {
+        return res.status(404).send({ error: 'Cannot delete: Balloon schedule is referenced in other collections(Cart).'});
+    }
+    const balloonschedule = await BalloonSchedule.findByIdAndDelete(req.params.id);
+    if (!balloonschedule) {
+      return res.status(404).send({ error: 'balloonschedule not found' });
+    }
     res.status(204).send();
   } catch (error) {
     res.status(500).send({ error: 'Failed to delete schedule', details: error.message });

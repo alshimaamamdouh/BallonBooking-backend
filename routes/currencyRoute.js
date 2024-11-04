@@ -1,9 +1,12 @@
 const express = require('express');
+const Cart = require('../models/Cart');
+const BalloonRide = require('../models/BalloonRide');
 const Currency = require('../models/Currency');
 const axios = require('axios');
 const router = express.Router(); 
 const exchangeRate = require('../functions/exchangeRate');
 const currencyCodes = require('../functions/currencyCodes');
+const isDocumentReferenced = require('../functions/isDocumentReferenced');
 
 // POST: Add a new currency
 router.post('/', async (req, res) => {
@@ -55,6 +58,18 @@ router.put('/:code', async (req, res) => {
 // DELETE: Delete a currency by code
 router.delete('/:code', async (req, res) => {
   try {
+    const references = [
+      { model: BalloonRide, field: 'currency' },
+      { model: Cart, field: 'items.currency' }
+    ];
+    const model_ = await Currency.findOne({'code': req.params.code});
+    if(model_){
+      const id_ = model_._id;
+      const isReferenced = await isDocumentReferenced(id_, references);
+      if (isReferenced) {
+        return res.status(404).send({ error: 'Cannot delete: Currecny is referenced in other collections(Balloon Ride Or Cart).'});
+    }
+  }
     const currency = await Currency.findOneAndDelete({ code: req.params.code });
     if (!currency) {
       return res.status(404).send({ error: 'Currency not found' });
@@ -64,9 +79,6 @@ router.delete('/:code', async (req, res) => {
     res.status(500).send({ error: 'Failed to delete currency', details: error.message });
   }
 });
-
-
-
 
 // Endpoint to get exchange rates
 router.get('/exchange-rate/:currency', async (req, res) => {

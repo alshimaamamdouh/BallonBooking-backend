@@ -6,7 +6,6 @@ const balloonRideSchema = new mongoose.Schema({
     type: { type: String, enum: ['Point'], required: true },
     coordinates: { type: [Number], required: true }
    },
-  price: { type: Number, required: true },
   description: { type: String },
   seatsAvailable: { type: Number, required: true },
   service: { type: mongoose.Schema.Types.ObjectId, ref: 'Service' },
@@ -18,8 +17,7 @@ const balloonRideSchema = new mongoose.Schema({
   imageUrl: {type: String },
   imageUrls: [ { type: String, }],
   public_id: {type: String },
-  public_ids: [{ type: String }],
-  company: { type: mongoose.Schema.Types.ObjectId, ref: 'Company', required: true }  
+  public_ids: [{ type: String }]
 });
 
 balloonRideSchema.index({ location: '2dsphere' }); // Index for geospatial queries

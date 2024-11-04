@@ -1,5 +1,8 @@
 const express = require('express');
 const Service = require('../models/Service');
+const BalloonRide = require('../models/BalloonRide');
+const isDocumentReferenced = require('../functions/isDocumentReferenced');
+
 const router = express.Router();
 
 // POST: Add a service
@@ -102,6 +105,15 @@ router.put('/updateImage/:id', async (req, res) => {
 // DELETE: Delete a service by ID
 router.delete('/:id', async (req, res) => {
   try {
+
+    const references = [
+      { model: BalloonRide, field: 'service' }
+    ];
+      const id_ = req.params.id;
+      const isReferenced = await isDocumentReferenced(id_, references);
+      if (isReferenced) {
+        return res.status(404).send({ error: 'Cannot delete: service is referenced in other collections(BalloonRide).'});
+    }
     const service = await Service.findByIdAndDelete(req.params.id);
     if (!service) {
       return res.status(404).send({ error: 'Service not found' });

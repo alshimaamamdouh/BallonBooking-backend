@@ -1,5 +1,10 @@
 const express = require('express');
 const Company = require('../models/Company');
+const Service = require('../models/Service');
+const Promotion = require('../models/Promotion');
+const User = require('../models/User'); 
+const isDocumentReferenced = require('../functions/isDocumentReferenced');
+
 const router = express.Router();
 
 // POST: Add a company
@@ -36,7 +41,22 @@ router.put('/:id', async (req, res) => {
 // DELETE: Delete a company by ID
 router.delete('/:id', async (req, res) => {
   try {
-    await Company.findByIdAndDelete(req.params.id);
+    const references = [
+      { model: Promotion, field: 'company' },
+      { model: Service, field: 'company' },
+      { model: User, field: 'company' }
+    ];
+      const id_ = req.params.id;
+      const isReferenced = await isDocumentReferenced(id_, references);
+      if (isReferenced) {
+        return res.status(404).send({ error: 'Cannot delete: Company is referenced in other collections(Promotion Or Service or User).'});
+    }
+
+
+   const company = await Company.findByIdAndDelete(req.params.id);
+    if (!company) {
+      return res.status(404).send({ error: 'company not found' });
+    }
     res.status(204).send();
   } catch (error) {
     res.status(500).send({ error: 'Failed to delete company', details: error.message });

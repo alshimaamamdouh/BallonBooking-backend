@@ -55,6 +55,12 @@ router.post('/login', async (req, res) => {
       { expiresIn: '1h' }
     );
 
+    // Check for existing cart data in cookies
+    let cartData = req.cookies.cart || [];
+    
+    // Clear the cart cookie (optional, if you want to delete it after saving in DB)
+    res.clearCookie('cart');
+
     // Send the token, name, isAdmin, and email
     res.send({
       token,
@@ -63,7 +69,8 @@ router.post('/login', async (req, res) => {
         name: user.name,
         email: user.email,
         isAdmin: user.isAdmin
-      }
+      },
+      cart: cartData,
     });
   } catch (error) {
     console.error('Login error:', error);
@@ -93,6 +100,7 @@ router.get('/', authMiddleware,  async (req, res) => {
     res.status(500).send(error);
   }
 });
+
 
 // protected - Delete a user
 router.delete('/:userId', authMiddleware, async (req, res) => {

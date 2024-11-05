@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const Cart = require('./Cart');
 const Promotion = require('./Promotion');
 const BalloonSchedule = require('./BalloonSchedule');
 
@@ -13,11 +12,15 @@ const orderSchema = new mongoose.Schema({
     ref: 'User', 
     required: true 
   },
-  cart: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'Cart', 
-    required: true 
-  },
+  orderItems: [
+    {
+      balloonSchedule: { type: mongoose.Schema.Types.ObjectId, ref: 'BalloonSchedule' ,unique: true },
+      adult: { type: Number, required: true, min: 0},
+      child: { type: Number, required: true, min: 0 },
+      totalPrice: { type: Number, default: 0 }, // Total price for the item
+      currency: { type: mongoose.Schema.Types.ObjectId, ref: 'Currency' }, // Reference to the Currency model
+    }
+  ],
   total: { 
     type: Number, 
     required: true 
@@ -52,7 +55,7 @@ const orderSchema = new mongoose.Schema({
   ]
 });
 
-// Middleware to set totalAmount from the associated cart
+// Middleware to set totalAmount
 orderSchema.pre('save', async function(next) {
   const order = this;
 
@@ -70,15 +73,12 @@ orderSchema.pre('save', async function(next) {
     });
   }
 
-    // Fetch the cart to calculate total amount
-    const cart = await Cart.findById(order.cart);
-    if (!cart) throw new Error('Cart not found');
     const promotion = await Promotion.findOne({"code" : order.promotionCode })
     if (!promotion) throw new Error('promotion not found');
 
 
-    // Calculate total amount from cart items and apply discount
-    const total = cart.items.reduce((acc, item) => acc + (item.totalPrice || 0), 0);
+    // Calculate total amount
+    const total = thid.orderItems.reduce((acc, item) => acc + (item.totalPrice || 0), 0);
     let finalAmount = 0; 
     if(promotion.status === 'Active' && promotion.start <= Date.now() && promotion.end >= Date.now()){ // start and end date check
       const finalDiscount = (total * promotion.discount) /100 

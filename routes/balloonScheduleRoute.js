@@ -111,12 +111,13 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const references = [
-      { model: Cart, field: 'balloonSchedule' }
+      { model: Cart, field: 'items.balloonSchedule' },
+      { model: Order, field: 'orderItems.balloonSchedule' }
     ];
       const id_ = req.params.id;
       const isReferenced = await isDocumentReferenced(id_, references);
       if (isReferenced) {
-        return res.status(404).send({ error: 'Cannot delete: Balloon schedule is referenced in other collections(Cart).'});
+        return res.status(404).send({ error: 'Cannot delete: Balloon schedule is referenced in other collections(Cart, Order).'});
     }
     const balloonschedule = await BalloonSchedule.findByIdAndDelete(req.params.id);
     if (!balloonschedule) {

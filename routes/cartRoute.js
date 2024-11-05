@@ -7,6 +7,19 @@ const router = express.Router();
 // POST: Add items to cart
 router.post('/', async (req, res) => {
   try {
+    const { user, items } = req.body;
+    
+    // Check if user is logged in (example check based on userId)
+    if (!user) {
+      // If user is not logged in, store cart data in cookie
+      let cart = req.cookies.cart || [];
+      cart.push(...items); // Add new items to the existing cart in cookies
+      
+      // Set cookie to expire in 30 days
+      res.cookie('cart', cart, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true });
+      return res.status(201).send({ message: 'Items added to cart cookie', cart });
+    }
+
     const cart = new Cart(req.body);
     await cart.save();
     res.status(201).send(cart);
@@ -15,6 +28,44 @@ router.post('/', async (req, res) => {
   }
 });
 
+// Add an item to the cart
+router.post('/add', async (req, res) => {
+  try {
+    const data = req.body;
+    const userId = data.user;
+    // Find or create the cart by user
+    let cart = await Cart.findOne({ "user" : userId });
+    if (!cart) {
+      cart = new Cart({ userId, items: [] });
+    }
+
+    // Check if the item already exists in the cart
+    const existingItem = cart.items.find(item => item.balloonSchedule.equals(data.items.balloonSchedule));
+    if (existingItem) {
+      existingItem.adult += parseInt(data.items.adult);
+      existingItem.child += parseInt(data.items.child);
+    } else {
+      cart.items.push({data});
+    }
+    
+    if (!userId) {
+      // If user is not logged in, store cart data in cookie
+      let cart = req.cookies.cart || [];
+      cart.push(...items); // Add new items to the existing cart in cookies
+      
+      // Set cookie to expire in 30 days
+      res.cookie('cart', cart, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true });
+      return res.status(201).send({ message: 'Items added to cart cookie', cart });
+    }
+
+    // Save the cart and calculate the total price
+    await cart.save();
+    res.status(200).json(cart);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 // GET: Get cart by user ID
 router.get('/user/:userId', async (req, res) => {
   try {
@@ -36,16 +87,17 @@ router.put('/user/:userId', async (req, res) => {
 });
 
 // DELETE: Clear cart by user ID
-router.delete('/user/:userId', async (req, res) => {
+router.delete('/clear/:userId', async (req, res) => {y
   try {
-    const references = [
-      { model: Order, field: 'cart' }
-    ];
-      const id_ = req.params.id;
-      const isReferenced = await isDocumentReferenced(id_, references);
-      if (isReferenced) {
-        return res.status(404).send({ error: 'Cannot delete: Cart is referenced in other collections(Order).'});
+
+    const { userId } = req.params;
+
+    // If user is not logged in, clear the cart cookie
+    if (!userId) {
+      res.clearCookie('cart'); // Clear cookie named 'cart'
+      return res.status(204).send({ message: 'Cart cleared from cookies' });
     }
+
     const cart = await Cart.findOneAndDelete({ user: req.params.userId });
     if (!cart) {
       return res.status(404).send({ error: 'Cart not found' });
@@ -53,6 +105,27 @@ router.delete('/user/:userId', async (req, res) => {
     res.status(204).send();
   } catch (error) {
     res.status(500).send({ error: 'Failed to clear cart', details: error.message });
+  }
+});
+
+// Delete item from the cart
+router.delete('/removeitem', async (req, res) => {
+  try {
+    const { userId, balloonScheduleId } = req.body;
+
+    // find the cart for the user
+    const cart = await Cart.findOne({ userId });
+    if (!cart) return res.status(404).json({ message: 'Cart not found' });
+
+    // remove the item from the cart
+    cart.items = cart.items.filter(item => !item.balloonSchedule.equals(balloonScheduleId));
+
+    // save the cart and calculate the total price
+    await cart.save();
+    res.status(200).json(cart);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 

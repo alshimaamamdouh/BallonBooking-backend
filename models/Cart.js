@@ -8,7 +8,7 @@ const cartSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   items: [
     {
-      balloonSchedule: { type: mongoose.Schema.Types.ObjectId, ref: 'BalloonSchedule' },
+      balloonSchedule: { type: mongoose.Schema.Types.ObjectId, ref: 'BalloonSchedule' ,unique: true },
       adult: { type: Number, required: true, min: 0},
       child: { type: Number, required: true, min: 0 },
       totalPrice: { type: Number, default: 0 }, // Total price for the item
@@ -26,9 +26,9 @@ cartSchema.pre('save', async function (next) {
   try {
     // all items in the cart
     for (let item of cart.items) {
-      if (item.schedule) {
+      if (item.balloonSchedule) {
         // schedule 
-        const schedule = await BalloonSchedule.findById(item.schedule);
+        const schedule = await BalloonSchedule.findById(item.balloonSchedule);
         if (!schedule) {
           throw new Error('Schedule not found');
         }
@@ -49,8 +49,7 @@ cartSchema.pre('save', async function (next) {
 
         const discountAmountChild = (balloonRide.childPrice * balloonRide.discount) / 100;
         const discountedPriceChild = balloonRide.childPrice - discountAmountChild;
-        const { currencyCode } = currency.code; // Example: 'USD'
-        const rate = await exchangeRate(currencyCode);
+        const rate = await exchangeRate(currency.code);
         item.totalPrice = ((discountedPriceAdult * item.adult) + (discountedPriceChild * item.child)) * rate;
       }
     }

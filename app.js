@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const connectDB = require('./config/db'); 
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 
 require('dotenv').config(); 
 
@@ -26,6 +27,7 @@ const app = express();
 // Middleware
 app.use(bodyParser.json());
 app.use(cors());
+app.use(cookieParser());
 
 // Connect to MongoDB
 connectDB();

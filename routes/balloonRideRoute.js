@@ -3,6 +3,7 @@ const BalloonRide = require('../models/BalloonRide');
 const WishList = require('../models/WishList');
 const BalloonSchedule = require('../models/BalloonSchedule');
 const isDocumentReferenced = require('../functions/isDocumentReferenced');
+const deleteImage = require('../functions/deleteImage');
 
 const router = express.Router();
 
@@ -91,6 +92,17 @@ router.delete('/:id', async (req, res) => {
     if (!balloonRide) {
       return res.status(404).send({ error: 'BalloonRide not found' });
     }
+
+    // Delete images 
+    const public_ids = balloonRide.public_ids; 
+    const public_id = balloonRide.public_id;
+    await deleteImage(public_id); 
+    if (public_ids && public_ids.length > 0) {
+      for (const publicId of public_ids) {
+        await deleteImage(publicId); 
+      }
+    }
+    // end delete images
     res.status(204).send();
   } catch (error) {
     res.status(500).send({ error: 'Failed to delete balloon ride', details: error.message });

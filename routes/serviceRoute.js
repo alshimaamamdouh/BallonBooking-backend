@@ -2,6 +2,7 @@ const express = require('express');
 const Service = require('../models/Service');
 const BalloonRide = require('../models/BalloonRide');
 const isDocumentReferenced = require('../functions/isDocumentReferenced');
+const deleteImage = require('../functions/deleteImage');
 
 const router = express.Router();
 
@@ -77,31 +78,6 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// PUT: Update a service with image 
-router.put('/updateImage/:id', async (req, res) => {
-  try {
-    
-    const public_ids = req.body.public_ids ? (Array.isArray(req.body.public_ids) ? req.body.public_ids : JSON.parse(req.body.public_ids)) : undefined;
-    const imageUrls = req.body.imageUrls ? (Array.isArray(req.body.imageUrls) ? req.body.imageUrls : JSON.parse(req.body.imageUrls)) : undefined;
-
-    
-    const updatedData = {
-      ...req.body,
-      ...(public_ids !== undefined && { public_ids }),  
-      ...(imageUrls !== undefined && { imageUrls }),    
-    };
-
-    const service = await Service.findByIdAndUpdate(req.params.id, updatedData, { new: true });
-    if (!service) {
-      return res.status(404).send({ error: 'Service not found' });
-    }
-    
-    res.status(200).send(service);
-  } catch (error) {
-    res.status(400).send({ error: 'Failed to update service', details: error.message });
-  }
-});
-
 // DELETE: Delete a service by ID
 router.delete('/:id', async (req, res) => {
   try {
@@ -114,10 +90,24 @@ router.delete('/:id', async (req, res) => {
       if (isReferenced) {
         return res.status(404).send({ error: 'Cannot delete: service is referenced in other collections(BalloonRide).'});
     }
-    const service = await Service.findByIdAndDelete(req.params.id);
+
+
+    const service = await Service.findById(id_);
     if (!service) {
       return res.status(404).send({ error: 'Service not found' });
     }
+
+    // Delete images 
+    const public_ids = service.public_ids; 
+    const public_id = service.public_id;
+    await deleteImage(public_id); 
+    if (public_ids && public_ids.length > 0) {
+      for (const publicId of public_ids) {
+        await deleteImage(publicId); 
+      }
+    }
+    // end delete images
+  
     res.status(204).send();
   } catch (error) {
     res.status(500).send({ error: 'Failed to delete service', details: error.message });

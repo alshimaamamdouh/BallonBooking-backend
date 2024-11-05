@@ -100,7 +100,10 @@ router.delete('/:id', async (req, res) => {
     // Delete images 
     const public_ids = service.public_ids; 
     const public_id = service.public_id;
-    await deleteImage(public_id); 
+
+    if (public_id) {
+      await deleteImage(public_id); 
+    }
     if (public_ids && public_ids.length > 0) {
       for (const publicId of public_ids) {
         await deleteImage(publicId); 

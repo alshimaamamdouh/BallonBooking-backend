@@ -61,7 +61,10 @@ router.delete('/:id', async (req, res) => {
 
     // Delete images 
     const public_id = company.public_id;
-    await deleteImage(public_id); 
+    
+    if (public_id) {
+      await deleteImage(public_id); 
+    }
     // end delete images
     
     res.status(204).send();

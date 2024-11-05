@@ -4,6 +4,7 @@ const WishList = require('../models/WishList');
 const BalloonSchedule = require('../models/BalloonSchedule');
 const isDocumentReferenced = require('../functions/isDocumentReferenced');
 const deleteImage = require('../functions/deleteImage');
+const updateImage = require('../functions/updateImage');
 
 const router = express.Router();
 
@@ -65,7 +66,7 @@ router.get('/service/:serviceId', async (req, res) => {
   }
 });
 
-// PUT: Update a balloon ride by ID
+//PUT: Update a balloon ride by ID
 router.put('/:id', async (req, res) => {
   try {
     const ride = await BalloonRide.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -74,6 +75,7 @@ router.put('/:id', async (req, res) => {
     res.status(500).send({ error: 'Failed to update balloon ride', details: error.message });
   }
 });
+
 
 // DELETE: Delete a balloon ride by ID
 router.delete('/:id', async (req, res) => {
@@ -94,9 +96,12 @@ router.delete('/:id', async (req, res) => {
     }
 
     // Delete images 
+    
     const public_ids = balloonRide.public_ids; 
     const public_id = balloonRide.public_id;
-    await deleteImage(public_id); 
+    if (public_id) {
+      await deleteImage(public_id); 
+    }
     if (public_ids && public_ids.length > 0) {
       for (const publicId of public_ids) {
         await deleteImage(publicId); 

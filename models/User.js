@@ -10,7 +10,7 @@ const userSchema = new mongoose.Schema({
   city: { type: String, default: '' },
   zip: { type: String, default: '' },
   country: { type: String, default: '' },
-  company: { type: mongoose.Schema.Types.ObjectId, ref: 'Company', required: true }  
+  company: { type: mongoose.Schema.Types.ObjectId, ref: 'Company' }  
 }, { timestamps: true });
 
 // Pre-save hook to hash password

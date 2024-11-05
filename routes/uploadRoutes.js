@@ -1,7 +1,7 @@
 const express = require('express');
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
-require('dotenv').config();  
+require('dotenv').config(); // Load environment 
 
 const router = express.Router();
 
@@ -82,7 +82,58 @@ router.post('/upload-multiple', upload.array('imageUrls', 5), async (req, res) =
 });
 
 
+// Delete an image from Cloudinary using public_id
+router.delete('/:publicId', async (req, res) => {
+    const publicId = req.params.publicId;
 
+    try {
+        // Use Cloudinary to delete the image
+        cloudinary.uploader.destroy(publicId, (error, result) => {
+            if (error) {
+                return res.status(500).json({ message: 'Cloudinary deletion failed', error });
+            }
+            res.status(200).json({ message: 'Image deleted successfully', result });
+        });
+    } catch (error) {
+        console.error('Server Error:', error);
+        return res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+
+// Update an image by first deleting the old one and uploading a new one
+router.put('/update/:publicId', upload.single('imageUrl'), async (req, res) => {
+    const publicId = req.params.publicId;
+
+    try {
+        // First, delete the old image
+        cloudinary.uploader.destroy(publicId, (error, result) => {
+            if (error) {
+                return res.status(500).json({ message: 'Failed to delete old image', error });
+            }
+
+            // Now, upload the new image
+            if (!req.file) {
+                return res.status(400).json({ message: 'No file uploaded' });
+            }
+
+            const uploadStream = cloudinary.uploader.upload_stream(
+                { folder: 'uploads' },
+                (error, result) => {
+                    if (error) {
+                        return res.status(500).json({ message: 'Cloudinary upload failed', error });
+                    }
+                    
+                    return res.status(200).json({ imageUrl: result.secure_url, public_id: result.public_id });
+                }
+            );
+
+            uploadStream.end(req.file.buffer);
+        });
+    } catch (error) {
+        console.error('Server Error:', error);
+        return res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
 
 
 module.exports = router;

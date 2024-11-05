@@ -29,6 +29,19 @@ router.get('/', async (req, res) => {
   }
 });
 
+// GET: Get company by ID
+router.get('/:id', async (req, res) => {
+  try {
+    const company = await Company.findById(req.params.id);
+    if (!company) {
+      return res.status(404).send({ error: 'company not found' });
+    }
+    res.status(200).send(company);
+  } catch (error) {
+    res.status(500).send({ error: 'Failed to retrieve company', details: error.message });
+  }
+});
+
 // PUT: Update a company by ID
 router.put('/:id', async (req, res) => {
   try {

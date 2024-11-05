@@ -78,7 +78,7 @@ orderSchema.pre('save', async function(next) {
 
 
     // Calculate total amount
-    const total = thid.orderItems.reduce((acc, item) => acc + (item.totalPrice || 0), 0);
+    const total = this.orderItems.reduce((acc, item) => acc + (item.totalPrice || 0), 0);
     let finalAmount = 0; 
     if(promotion.status === 'Active' && promotion.start <= Date.now() && promotion.end >= Date.now()){ // start and end date check
       const finalDiscount = (total * promotion.discount) /100 

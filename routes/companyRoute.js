@@ -4,6 +4,7 @@ const Service = require('../models/Service');
 const Promotion = require('../models/Promotion');
 const User = require('../models/User'); 
 const isDocumentReferenced = require('../functions/isDocumentReferenced');
+const deleteImage = require('../functions/deleteImage');
 
 const router = express.Router();
 
@@ -57,6 +58,12 @@ router.delete('/:id', async (req, res) => {
     if (!company) {
       return res.status(404).send({ error: 'company not found' });
     }
+
+    // Delete images 
+    const public_id = company.public_id;
+    await deleteImage(public_id); 
+    // end delete images
+    
     res.status(204).send();
   } catch (error) {
     res.status(500).send({ error: 'Failed to delete company', details: error.message });

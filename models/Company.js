@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const companySchema = new mongoose.Schema({
   code: { type: String, required: true , unique: true },
-  name: { type: String, required: true },
+  name: { type: String, required: true, unique: true },
   logo: { type: String }, 
   public_id: { type: String }, 
   location: [

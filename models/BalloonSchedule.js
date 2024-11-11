@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const BalloonRide = require('./BalloonRide'); // Assuming BalloonRide model is in the same directory
+const BalloonRide = require('./BalloonRide'); 
 
 const balloonScheduleSchema = new mongoose.Schema({
   balloonRide: { type: mongoose.Schema.Types.ObjectId, ref: 'BalloonRide', required: true },

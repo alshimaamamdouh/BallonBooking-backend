@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const serviceSchema = new mongoose.Schema({
-  name: { type: String, required: true },
+  name: { type: String, required: true, unique: true },
   description: { type: String },
   available: { type: Boolean, default: true },
   imageUrl: {type: String },
@@ -11,5 +11,5 @@ const serviceSchema = new mongoose.Schema({
   company: { type: mongoose.Schema.Types.ObjectId, ref: 'Company', required: true }  
 });
 
-
+serviceSchema.index({ company: 1, name: 1 }, { unique: true });
 module.exports = mongoose.model('Service', serviceSchema);

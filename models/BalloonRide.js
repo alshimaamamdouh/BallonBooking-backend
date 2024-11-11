@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const balloonRideSchema = new mongoose.Schema({
-  title: { type: String, required: true },
+  title: { type: String, required: true, unique: true },
   location: { 
     type: { type: String, enum: ['Point'], required: true },
     coordinates: { type: [Number], required: true }
@@ -20,6 +20,6 @@ const balloonRideSchema = new mongoose.Schema({
   public_ids: [{ type: String }]
 });
 
-balloonRideSchema.index({ location: '2dsphere' }); // Index for geospatial queries
+balloonRideSchema.index({ location: '2dsphere' }); 
 
 module.exports = mongoose.model('BalloonRide', balloonRideSchema);

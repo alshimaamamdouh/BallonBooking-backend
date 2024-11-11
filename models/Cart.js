@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
-const BalloonSchedule = require('./BalloonSchedule'); // Assuming the Service model is in the same directory
-const Currency = require('./Currency'); // Assuming the Currency model is in the same directory
+const BalloonSchedule = require('./BalloonSchedule'); 
+const Currency = require('./Currency'); 
 const BalloonRide = require('./BalloonRide');
 const exchangeRate = require('../functions/exchangeRate');
 
@@ -12,12 +12,13 @@ const cartSchema = new mongoose.Schema({
       adult: { type: Number, required: true, min: 0},
       child: { type: Number, required: true, min: 0 },
       totalPrice: { type: Number, default: 0 }, // Total price for the item
-      currency: { type: mongoose.Schema.Types.ObjectId, ref: 'Currency' }, // Reference to the Currency model
+      currency: { type: mongoose.Schema.Types.ObjectId, ref: 'Currency' }, 
     }
   ]
 });
 
-cartSchema.index({ user: 1 }); // Index for faster querying by user
+cartSchema.index({ user: 1 }); 
+cartSchema.index({ 'items.balloonSchedule': 1 }); 
 
 // Middleware to calculate total price before saving the cart
 cartSchema.pre('save', async function (next) {

@@ -7,17 +7,14 @@ const DailyBooking = require('../models/DailyBooking');
 const sendEmail = require('../email/emailservice');
 const router = express.Router();
 
-const checkSeatAvailability = async (balloonScheduleId, date, seatsRequested) => {
-  // const schedule = await BalloonSchedule.findById(balloonScheduleId);
-  // if (!schedule) throw new Error('Schedule not found');
+const checkSeatAvailability = async (balloonScheduleId, date) => {
+  
   const dailyBooking = await DailyBooking.findOne({'balloonSchedule': balloonScheduleId, 'bookingDate': date})
   if(dailyBooking)
   {
     return dailyBooking.status;
   }
   return true;
-  // // Check if requested seats exceed available seats
-  // return (seatsRequested <= schedule.emptySeats)
 };
 
 const cancelOrder = async (order) => {
@@ -27,14 +24,9 @@ const cancelOrder = async (order) => {
     for (const item of order.orderItems){
       const dailyBooking = DailyBooking.findOne({'balloonSchedule': item.balloonSchedule, 'bookingDate': item.bookingDate})
       dailyBooking.bookedSeats += item.seatsRequested;
-      dailyBooking.updateOne();
+      dailyBooking.save();
     }
    
-    // const schedule = await BalloonSchedule.findById(order.balloonSchedule);
-    // if (schedule) {
-    //   schedule.bookedSeats -= order.seatsRequested;
-    //   await schedule.save();
-    // }
 
   } catch (error) {
     throw new Error('Order Not Canceled');
@@ -48,18 +40,13 @@ router.post('/', async (req, res) => {
    
     const user = await User.findById(req.body.user);
     if (!user) throw new Error('User not found');
-    // const cart = await User.findById(req.body.cart);
-    // if (!cart) throw new Error('Cart not found');
-
-    let allSeatsAvailable = true; // Flag to check availability
 
     // Loop through the items to check availability
     for (const item of req.body.orderItems) {
       let seatsRequested = item.adult + item.child; // Adjust based on your logic for seat requests
 
-      const isAvailable = await checkSeatAvailability(item.balloonSchedule, item.bookingDate, seatsRequested);
+      const isAvailable = await checkSeatAvailability(item.balloonSchedule, item.bookingDate);
       if (!isAvailable) {
-        allSeatsAvailable = false; // Set the flag to false if any item is not available
         return res.status(400).send({
           error: `Not enough seats available for the service: ${item.balloonSchedule.balloonRide.title}`
         });

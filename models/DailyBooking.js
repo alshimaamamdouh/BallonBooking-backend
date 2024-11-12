@@ -24,12 +24,12 @@ dailyBookingSchema.pre('save', async function (next) {
       const ride = await BalloonRide.findById(balloonSchedule.balloonRide);
       if (ride) {
         this.totalSeats = ride.seatsAvailable;
-        this.seatsAvailable = this.totalSeats - this.bookedSeats;
+        this.seatsAvailable = (this.totalSeats - this.bookedSeats) < 0 ? 0 : (this.totalSeats - this.bookedSeats);
       } else {
-        throw new Error('Schedule not found');
+        throw new Error('Ride not found');
       }
     }else{
-      this.seatsAvailable = this.totalSeats - this.bookedSeats;
+      this.seatsAvailable = (this.totalSeats - this.bookedSeats) < 0 ? 0 : (this.totalSeats - this.bookedSeats);
     }
 
     if (this.totalSeats  === this.bookedSeats)

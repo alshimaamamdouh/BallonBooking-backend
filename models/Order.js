@@ -53,16 +53,11 @@ orderSchema.pre('save', async function(next) {
           if(dailyBooking)
           {
             bookedSeats = Number(dailyBooking.get('bookedSeats'));
-            // dailyBooking.set('bookedSeats',bookedSeats + Number(item.adult) + Number(item.child));
-            // const updateDailyBooking = new findByIdAndUpdate(dailyBooking.id,dailyBooking, { new: true });
             const updateDailyBooking = new DailyBooking.findById(dailyBooking.id);
             updateDailyBooking.bookedSeats = bookedSeats + Number(item.adult) + Number(item.child)
             await updateDailyBooking.save();
           }else{
             const newDailyBooking = new DailyBooking();
-            // newDailyBooking.set('balloonSchedule',item.balloonSchedule);
-            // newDailyBooking.set('bookingDate',item.bookingDate);
-            // newDailyBooking.set('bookedSeats', Number(item.adult) + Number(item.child));
             newDailyBooking.balloonSchedule = item.balloonSchedule;
             newDailyBooking.bookingDate = item.bookingDate;
             newDailyBooking.bookedSeats = Number(item.adult) + Number(item.child)
@@ -104,16 +99,6 @@ orderSchema.pre('save', async function(next) {
     next(error);
   }
 });
-orderSchema.post('save', async function (order) {
-  // try {
-  //   const schedule = await BalloonSchedule.findById(order.balloonSchedule);
-  //   if (schedule) {
-  //     schedule.bookedSeats += order.seatsRequested;
-  //     await schedule.save();
-  //   }
-  // } catch (error) {
-  //   console.error('Error updating booked seats:', error);
-  // }
-});
+
 
 module.exports = mongoose.model('Order', orderSchema);

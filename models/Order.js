@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const Promotion = require('./Promotion');
 const BalloonSchedule = require('./BalloonSchedule');
 const DailyBooking = require('./DailyBooking');
+const { findById } = require('./Promotion');
 
 const orderSchema = new mongoose.Schema({
   orderNumber: { 
@@ -46,19 +47,28 @@ orderSchema.pre('save', async function(next) {
     if (this.isNew) {
       const randomFourDigits = Math.floor(1000 + Math.random() * 9000); // number between 1000 and 9999
       this.orderNumber = `#${randomFourDigits}`;
-      const dailyBooking = DailyBooking.findOne({'bookingDate':this.orderItems.bookingDate})
-      if(dailyBooking)
-      {
-        bookedSeats = dailyBooking.get('bookedSeats');
-        dailyBooking.set('bookedSeats',bookedSeats + this.adult + this.child);
-        const updateDailyBooking = new findByIdAndUpdate(dailyBooking.id,dailyBooking, { new: true });
-        await updateDailyBooking.save();
-      }else{
-        const newDailyBooking = new DailyBooking();
-        newDailyBooking.set('balloonSchedule',this.balloonSchedule);
-        newDailyBooking.set('bookingDate',this.bookingDate);
-        newDailyBooking.set('bookedSeats',this.adult + this.child);
-        await newDailyBooking.save();
+      for (const item of this.orderItems){
+          const dailyBooking = await DailyBooking.findOne({'bookingDate':item.bookingDate})
+          // if(dailyBooking)
+          if(dailyBooking)
+          {
+            bookedSeats = Number(dailyBooking.get('bookedSeats'));
+            // dailyBooking.set('bookedSeats',bookedSeats + Number(item.adult) + Number(item.child));
+            // const updateDailyBooking = new findByIdAndUpdate(dailyBooking.id,dailyBooking, { new: true });
+            const updateDailyBooking = new DailyBooking.findById(dailyBooking.id);
+            updateDailyBooking.bookedSeats = bookedSeats + Number(item.adult) + Number(item.child)
+            await updateDailyBooking.save();
+          }else{
+            const newDailyBooking = new DailyBooking();
+            // newDailyBooking.set('balloonSchedule',item.balloonSchedule);
+            // newDailyBooking.set('bookingDate',item.bookingDate);
+            // newDailyBooking.set('bookedSeats', Number(item.adult) + Number(item.child));
+            newDailyBooking.balloonSchedule = item.balloonSchedule;
+            newDailyBooking.bookingDate = item.bookingDate;
+            newDailyBooking.bookedSeats = Number(item.adult) + Number(item.child)
+            
+            await newDailyBooking.save();
+          }
       }
     }
    if (this.isModified('status')) {
@@ -71,35 +81,39 @@ orderSchema.pre('save', async function(next) {
   }
 
     const promotion = await Promotion.findOne({"code" : order.promotionCode })
-    if (!promotion) throw new Error('promotion not found');
+    if (!promotion){
+        // Calculate total amount
+        const total = this.orderItems.reduce((acc, item) => acc + (item.totalPrice || 0), 0);
+        const finalAmount = total;
+        order.total = finalAmount >= 0 ? finalAmount : 0; // Ensure totalAmount is not negative
 
-
-    // Calculate total amount
-    const total = this.orderItems.reduce((acc, item) => acc + (item.totalPrice || 0), 0);
-    let finalAmount = 0; 
-    if(promotion.status === 'Active' && promotion.start <= Date.now() && promotion.end >= Date.now()){ // start and end date check
-      const finalDiscount = (total * promotion.discount) /100 
-      finalAmount = total- finalDiscount;
     }else{
-      finalAmount = total;
-    }
-    order.total = finalAmount >= 0 ? finalAmount : 0; // Ensure totalAmount is not negative
-
+      // Calculate total amount
+      const total = this.orderItems.reduce((acc, item) => acc + (item.totalPrice || 0), 0);
+      let finalAmount = 0; 
+      if(promotion.status === 'Active' && promotion.start <= Date.now() && promotion.end >= Date.now()){ // start and end date check
+        const finalDiscount = (total * promotion.discount) /100 
+        finalAmount = total- finalDiscount;
+      }else{
+        finalAmount = total;
+      }
+      order.total = finalAmount >= 0 ? finalAmount : 0; // Ensure totalAmount is not negative
+  }
     next();
   } catch (error) {
     next(error);
   }
 });
 orderSchema.post('save', async function (order) {
-  try {
-    const schedule = await BalloonSchedule.findById(order.balloonSchedule);
-    if (schedule) {
-      schedule.bookedSeats += order.seatsRequested;
-      await schedule.save();
-    }
-  } catch (error) {
-    console.error('Error updating booked seats:', error);
-  }
+  // try {
+  //   const schedule = await BalloonSchedule.findById(order.balloonSchedule);
+  //   if (schedule) {
+  //     schedule.bookedSeats += order.seatsRequested;
+  //     await schedule.save();
+  //   }
+  // } catch (error) {
+  //   console.error('Error updating booked seats:', error);
+  // }
 });
 
 module.exports = mongoose.model('Order', orderSchema);

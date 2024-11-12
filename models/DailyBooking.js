@@ -1,9 +1,11 @@
 const mongoose = require('mongoose');
+const BalloonSchedule = require('../models/BalloonSchedule');
+const BalloonRide = require('../models/BalloonRide');
 
 const dailyBookingSchema = new mongoose.Schema({
   balloonSchedule: { type: mongoose.Schema.Types.ObjectId, ref: 'BalloonSchedule', required: true },
   bookingDate: { type: Date, required: true },
-  totalSeats: { type: Number, required: true },
+  totalSeats: { type: Number},
   bookedSeats: { type: Number, default: 0 },
   seatsAvailable: { type: Number },
   status: { type: Boolean, default: true }
@@ -18,13 +20,16 @@ const dailyBookingSchema = new mongoose.Schema({
 dailyBookingSchema.pre('save', async function (next) {
   try {
     if (this.isNew) { // Only fetch totalSeats on document creation
-      const ride = await BalloonRide.findById(this.balloonSchedule.BalloonRide);
+      const balloonSchedule = await BalloonSchedule.findById(this.balloonSchedule);
+      const ride = await BalloonRide.findById(balloonSchedule.balloonRide);
       if (ride) {
-        this.seatsAvailable = ride.seatsAvailable;
         this.totalSeats = ride.seatsAvailable;
+        this.seatsAvailable = this.totalSeats - this.bookedSeats;
       } else {
         throw new Error('Schedule not found');
       }
+    }else{
+      this.seatsAvailable = this.totalSeats - this.bookedSeats;
     }
 
     if (this.totalSeats  === this.bookedSeats)

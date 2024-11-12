@@ -9,6 +9,7 @@ const cartSchema = new mongoose.Schema({
   items: [
     {
       balloonSchedule: { type: mongoose.Schema.Types.ObjectId, ref: 'BalloonSchedule' ,unique: true },
+      bookingDate:{ type: Date, required: true },
       adult: { type: Number, required: true, min: 0},
       child: { type: Number, required: true, min: 0 },
       totalPrice: { type: Number, default: 0 }, // Total price for the item

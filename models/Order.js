@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const Promotion = require('./Promotion');
 const BalloonSchedule = require('./BalloonSchedule');
+const DailyBooking = require('./DailyBooking');
 
 const orderSchema = new mongoose.Schema({
   orderNumber: { 
@@ -15,6 +16,7 @@ const orderSchema = new mongoose.Schema({
   orderItems: [
     {
       balloonSchedule: { type: mongoose.Schema.Types.ObjectId, ref: 'BalloonSchedule' ,unique: true },
+      bookingDate:{ type: Date, required: true },
       adult: { type: Number, required: true, min: 0},
       child: { type: Number, required: true, min: 0 },
       totalPrice: { type: Number, default: 0 }, // Total price for the item
@@ -63,6 +65,20 @@ orderSchema.pre('save', async function(next) {
     if (this.isNew) {
       const randomFourDigits = Math.floor(1000 + Math.random() * 9000); // number between 1000 and 9999
       this.orderNumber = `#${randomFourDigits}`;
+      const dailyBooking = DailyBooking.findOne({'bookingDate':this.orderItems.bookingDate})
+      if(dailyBooking)
+      {
+        bookedSeats = dailyBooking.get('bookedSeats');
+        dailyBooking.set('bookedSeats',bookedSeats + this.adult + this.child);
+        const updateDailyBooking = new findByIdAndUpdate(dailyBooking.id,dailyBooking, { new: true });
+        await updateDailyBooking.save();
+      }else{
+        const newDailyBooking = new DailyBooking();
+        newDailyBooking.set('balloonSchedule',this.balloonSchedule);
+        newDailyBooking.set('bookingDate',this.bookingDate);
+        newDailyBooking.set('bookedSeats',this.adult + this.child);
+        await newDailyBooking.save();
+      }
     }
    if (this.isModified('status')) {
     // Only add to history if status was modified

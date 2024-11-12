@@ -7,9 +7,8 @@ const serviceSchema = new mongoose.Schema({
   imageUrl: {type: String },
   imageUrls: [ { type: String, }],
   public_id: {type: String },
-  public_ids: [{ type: String }],
-  company: { type: mongoose.Schema.Types.ObjectId, ref: 'Company', required: true }  
+  public_ids: [{ type: String }]
 });
 
-serviceSchema.index({ company: 1, name: 1 }, { unique: true });
+serviceSchema.index({name: 1 }, { unique: true });
 module.exports = mongoose.model('Service', serviceSchema);

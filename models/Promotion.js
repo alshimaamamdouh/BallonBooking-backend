@@ -7,7 +7,6 @@ const promotionSchema = new mongoose.Schema({
   start: { type: Date, requird: true },
   end: { type: Date, requird: true },
   status: {type: String, default:'Active'},
-  company: { type: mongoose.Schema.Types.ObjectId, ref: 'Company', required: true }  
 });
 
 

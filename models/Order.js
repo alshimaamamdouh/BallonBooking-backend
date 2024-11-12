@@ -23,31 +23,12 @@ const orderSchema = new mongoose.Schema({
       currency: { type: mongoose.Schema.Types.ObjectId, ref: 'Currency' }, // Reference to the Currency model
     }
   ],
-  total: { 
-    type: Number, 
-    required: true 
-  },
-  status: { 
-    type: String, 
-    enum: ['Pending', 'Confirmed', 'Cancelled', 'Completed'], 
-    default: 'Pending', 
-    required: true 
-  },
-  orderDate: { 
-    type: Date, 
-    default: Date.now 
-  },
-  paymentMethod: { 
-    type: String, 
-    enum: ['Credit Card', 'PayPal', 'Bank Transfer'], 
-    required: true 
-  },
-  promotionCode: { 
-    type: String
-  },
-  transactionId: { 
-    type: String 
-  },
+  total: { type: Number, required: true },
+  status: { type: String, enum: ['Pending', 'Confirmed', 'Cancelled', 'Completed'], default: 'Pending', required: true },
+  orderDate: { type: Date, default: Date.now },
+  paymentMethod: { type: String, enum: ['Credit Card', 'PayPal', 'Bank Transfer'], required: true },
+  promotionCode: { type: String},
+  transactionId: { type: String },
   statusHistory: [
     {
       status: { type: String },

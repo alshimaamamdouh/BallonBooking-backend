@@ -16,7 +16,7 @@ const orderSchema = new mongoose.Schema({
   },
   orderItems: [
     {
-      balloonSchedule: { type: mongoose.Schema.Types.ObjectId, ref: 'BalloonSchedule' ,unique: true },
+      balloonSchedule: { type: mongoose.Schema.Types.ObjectId, ref: 'BalloonSchedule'},
       bookingDate:{ type: Date, required: true },
       adult: { type: Number, required: true, min: 0},
       child: { type: Number, required: true, min: 0 },
@@ -47,23 +47,32 @@ orderSchema.pre('save', async function(next) {
     if (this.isNew) {
       const randomFourDigits = Math.floor(1000 + Math.random() * 9000); // number between 1000 and 9999
       this.orderNumber = `#${randomFourDigits}`;
+      let scheduleIds = {};
       for (const item of this.orderItems){
-          const dailyBooking = await DailyBooking.findOne({'bookingDate':item.bookingDate})
-          // if(dailyBooking)
-          if(dailyBooking)
-          {
-            bookedSeats = Number(dailyBooking.get('bookedSeats'));
-            const updateDailyBooking = new DailyBooking.findById(dailyBooking.id);
-            updateDailyBooking.bookedSeats = bookedSeats + Number(item.adult) + Number(item.child)
-            await updateDailyBooking.save();
-          }else{
-            const newDailyBooking = new DailyBooking();
-            newDailyBooking.balloonSchedule = item.balloonSchedule;
-            newDailyBooking.bookingDate = item.bookingDate;
-            newDailyBooking.bookedSeats = Number(item.adult) + Number(item.child)
-            
-            await newDailyBooking.save();
-          }
+        if(!(item.balloonSchedule in scheduleIds))
+          scheduleIds[item.balloonSchedule] = Number(item.adult) + Number(item.child);
+        else
+          scheduleIds[item.balloonSchedule] += Number(item.adult) + Number(item.child);
+      }
+      let checkSchedule = [];
+      for (const item of this.orderItems){
+          if (!checkSchedule.includes(item.balloonSchedule.toString()) && (item.balloonSchedule in scheduleIds)){
+            checkSchedule.push(item.balloonSchedule.toString());
+            const dailyBooking = await DailyBooking.findOne({'balloonSchedule':item.balloonSchedule});
+            if(dailyBooking) 
+            {
+              bookedSeats = Number(dailyBooking.get('bookedSeats'));
+              const updateDailyBooking =  await DailyBooking.findById(dailyBooking.id);
+              updateDailyBooking.bookedSeats = bookedSeats + scheduleIds[item.balloonSchedule];
+              updateDailyBooking.save();
+            }else{
+              const newDailyBooking = new DailyBooking();
+              newDailyBooking.balloonSchedule = item.balloonSchedule;
+              newDailyBooking.bookingDate = item.bookingDate;
+              newDailyBooking.bookedSeats = scheduleIds[item.balloonSchedule];
+              newDailyBooking.save();
+            }
+        }
       }
     }
    if (this.isModified('status')) {

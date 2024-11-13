@@ -19,17 +19,31 @@ const dailyBookingSchema = new mongoose.Schema({
 // Pre-save hook to set totalSeats based on linked schedule
 dailyBookingSchema.pre('save', async function (next) {
   try {
-    if (this.isNew) { // Only fetch totalSeats on document creation
+   
+      if (this.isNew) { // Only fetch totalSeats on document creation
       const balloonSchedule = await BalloonSchedule.findById(this.balloonSchedule);
       const ride = await BalloonRide.findById(balloonSchedule.balloonRide);
       if (ride) {
         this.totalSeats = ride.seatsAvailable;
-        this.seatsAvailable = (this.totalSeats - this.bookedSeats) < 0 ? 0 : (this.totalSeats - this.bookedSeats);
+        this.seatsAvailable = (this.totalSeats - this.bookedSeats) < 0 ? ride.seatsAvailable : (this.totalSeats - this.bookedSeats);
       } else {
         throw new Error('Ride not found');
       }
     }else{
-      this.seatsAvailable = (this.totalSeats - this.bookedSeats) < 0 ? 0 : (this.totalSeats - this.bookedSeats);
+      if (!this._original) {
+        this._original = await this.constructor.findById(this._id).lean(); // Get original document as plain object
+      }
+      this.seatsAvailable = (this.totalSeats - this.bookedSeats) < 0 ? this._original.seatsAvailable : (this.totalSeats - this.bookedSeats);
+    }
+    
+    if(this.bookedSeats > this.totalSeats){
+      const balloonSchedule = await BalloonSchedule.findById(this.balloonSchedule);
+      const balloonRide = await BalloonRide.findById(balloonSchedule.balloonRide);
+      if(this.seatsAvailable != 0)
+        return next( new Error('Sorry this time for this ride '+ balloonRide.title.toString() + ' is full we have only '+this.seatsAvailable.toString()));
+      else
+        return next( new Error('Sorry this time for this ride '+ balloonRide.title.toString() + ' is full'));
+
     }
 
     if (this.totalSeats  === this.bookedSeats)

@@ -14,6 +14,7 @@ const cartSchema = new mongoose.Schema({
       child: { type: Number, required: true, min: 0 },
       totalPrice: { type: Number, default: 0 }, // Total price for the item
       currency: { type: mongoose.Schema.Types.ObjectId, ref: 'Currency' }, 
+      status: {type: String, default: 'Available'}
     }
   ]
 });

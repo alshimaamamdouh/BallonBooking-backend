@@ -5,17 +5,9 @@ const BalloonSchedule = require('../models/BalloonSchedule');
 const BalloonRide = require('../models/BalloonRide');
 const DailyBooking = require('../models/DailyBooking');
 const sendEmail = require('../email/emailservice');
-const router = express.Router();
-
-const checkSeatAvailability = async (balloonScheduleId, date) => {
+const checkSeatAvailability = require('../functions/checkSeatAvailability');
   
-  const dailyBooking = await DailyBooking.findOne({'balloonSchedule': balloonScheduleId, 'bookingDate': date})
-  if(dailyBooking)
-  {
-    return dailyBooking.status;
-  }
-  return true;
-};
+const router = express.Router();
 
 const cancelOrder = async (order) => {
   try {

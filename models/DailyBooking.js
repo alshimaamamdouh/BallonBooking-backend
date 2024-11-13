@@ -39,11 +39,15 @@ dailyBookingSchema.pre('save', async function (next) {
     if(this.bookedSeats > this.totalSeats){
       const balloonSchedule = await BalloonSchedule.findById(this.balloonSchedule);
       const balloonRide = await BalloonRide.findById(balloonSchedule.balloonRide);
-      if(this.seatsAvailable != 0)
-        return next( new Error('Sorry this time for this ride '+ balloonRide.title.toString() + ' is full we have only '+this.seatsAvailable.toString()));
-      else
-        return next( new Error('Sorry this time for this ride '+ balloonRide.title.toString() + ' is full'));
+       // Construct a detailed error message with the ride title and availability info
+       const errorMessage = this.seatsAvailable > 0
+       ? `Sorry, this ride (${balloonRide.title}) is nearly full. Only ${this.seatsAvailable} seat(s) are left.`
+       : `Sorry, this ride (${balloonRide.title}) is fully booked.`;
 
+     // Attach the custom message as an error to be caught by the frontend
+     const error = new Error(errorMessage);
+     error.isFull = true; // Flag to indicate the ride is full for the frontend to check
+     return next(error);
     }
 
     if (this.totalSeats  === this.bookedSeats)

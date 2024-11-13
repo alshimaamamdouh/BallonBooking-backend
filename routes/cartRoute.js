@@ -2,23 +2,32 @@ const express = require('express');
 const Cart = require('../models/Cart');
 const Order = require('../models/Order');
 const isDocumentReferenced = require('../functions/isDocumentReferenced');
+const checkSeatAvailability = require('../functions/checkSeatAvailability');
 const router = express.Router();
 
 // POST: Add items to cart
 router.post('/', async (req, res) => {
   try {
     const { user, items } = req.body;
+    for(const item of items){
+      if(!checkSeatAvailability(item.balloonSchedule, item.bookingDate)){
+         item.status = 'Sold Out'; 
+      }
+    }
     
     // Check if user is logged in (example check based on userId)
     if (!user) {
       // If user is not logged in, store cart data in cookie
       let cart = req.cookies.cart || [];
+          
       cart.push(...items); // Add new items to the existing cart in cookies
       
       // Set cookie to expire in 30 days
       res.cookie('cart', cart, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true });
       return res.status(201).send({ message: 'Items added to cart cookie', cart });
     }
+
+    
 
     const cart = new Cart(req.body);
     await cart.save();
@@ -33,6 +42,12 @@ router.post('/add', async (req, res) => {
   try {
     const data = req.body;
     const userId = data.user;
+    
+    for(const item of data.items){
+      if(!checkSeatAvailability(item.balloonSchedule, item.bookingDate)){
+         item.status = 'Sold Out'; 
+      }
+    }
     // Find or create the cart by user
     let cart = await Cart.findOne({ "user" : userId });
     if (!cart) {
@@ -51,7 +66,7 @@ router.post('/add', async (req, res) => {
     if (!userId) {
       // If user is not logged in, store cart data in cookie
       let cart = req.cookies.cart || [];
-      cart.push(...items); // Add new items to the existing cart in cookies
+      cart.push(...data); // Add new items to the existing cart in cookies
       
       // Set cookie to expire in 30 days
       res.cookie('cart', cart, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true });
@@ -71,6 +86,35 @@ router.get('/user/:userId', async (req, res) => {
   try {
     const cart = await Cart.findOne({ user: req.params.userId });
     res.status(200).send(cart);
+  } catch (error) {
+    res.status(500).send({ error: 'Failed to retrieve cart', details: error.message });
+  }
+});
+
+// GET: Get cart by user ID
+router.get('/checkSeats/:cartId', async (req, res) => {
+  try {
+        if(req.params.cartId === 0){
+          let cart = req.cookies.cart || [];
+          for(const item of cart.items){
+            if(!checkSeatAvailability(item.balloonSchedule, item.bookingDate)){
+               item.status = 'Sold Out'; 
+            }
+        }
+        res.send(cart);
+      }
+        else{
+    const cart = await Cart.findById(req.params.cartId );
+    
+    for(const item of cart.items){
+     if(!checkSeatAvailability(item.balloonSchedule, item.bookingDate)){
+        item.status = 'Sold Out';
+     };
+    }
+    res.send(cart);
+  
+}
+    res.send('No Cart Or Cookies Available');
   } catch (error) {
     res.status(500).send({ error: 'Failed to retrieve cart', details: error.message });
   }

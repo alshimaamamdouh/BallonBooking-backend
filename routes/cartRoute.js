@@ -65,33 +65,38 @@ router.post('/add', async (req, res) => {
          item.status = 'Sold Out'; 
       }
     }
-    // Find or create the cart by user
-    let cart = await Cart.findOne({ "user" : userId });
-    if (!cart) {
-      cart = new Cart({ userId, items: [] });
-    }
 
-    // Check if the item already exists in the cart
-    const existingItem = cart.items.find(item => item.balloonSchedule.equals(data.items.balloonSchedule));
-    if (existingItem) {
-      existingItem.adult += parseInt(data.items.adult);
-      existingItem.child += parseInt(data.items.child);
-    } else {
-      cart.items.push({data});
-    }
-    
     if (!userId) {
       // If user is not logged in, store cart data in cookie
-      let cart = req.cookies.cart || [];
-      cart.push(...data); // Add new items to the existing cart in cookies
+      let cartCookies = req.cookies.cart || [];
+      cartCookies.push(...data.items); // Add new items to the existing cart in cookies
       
       // Set cookie to expire in 30 days
       res.cookie('cart', cart, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true });
       return res.status(201).send({ message: 'Items added to cart cookie', cart });
+    }else{
+    // Find or create the cart by user
+    let cart = await Cart.findOne({ "user" : userId });
+    if (!cart) {
+      cart = new Cart({ userId, items: [] });
+      cart.items = data.items ;
+    }
+    for (const item of  data.items){
+      cart.items = await checkSchedule(cart.items,item);
+    }
+    if(req.cookies.cart.length > 0){
+      for(const item of data.items){
+        cart.items = await checkSchedule(req.cookies.cart,item);
+      }
+    }
+   
+      res.clearCookie('cart');  // Adjust path if needed
+      res.send('Cookie cleared');
+      // Save the cart and calculate the total price
+      await cart.save();
     }
 
-    // Save the cart and calculate the total price
-    await cart.save();
+ 
     res.status(200).json(cart);
   } catch (error) {
     console.error(error);

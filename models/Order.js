@@ -3,6 +3,7 @@ const Promotion = require('./Promotion');
 const BalloonSchedule = require('./BalloonSchedule');
 const DailyBooking = require('./DailyBooking');
 const { findById } = require('./Promotion');
+const checkSchedule = require('../functions/checkSchedule');
 
 const orderSchema = new mongoose.Schema({
   orderNumber: { 
@@ -43,7 +44,6 @@ const orderSchema = new mongoose.Schema({
 
 //pre
 orderSchema.pre('save', async function(next) {
-  const order = this;
 
   try {
     // Generate order number if it's a new order
@@ -52,25 +52,35 @@ orderSchema.pre('save', async function(next) {
       this.orderNumber = `#${randomFourDigits}`;
     }
 
-    // Track seat bookings per schedule
-    const scheduleIds = {};
-    for (const item of order.orderItems) {
-      scheduleIds[item.balloonSchedule.toString() +'###'+ item.bookingDate.toString()] ={'child': (scheduleIds[item.balloonSchedule.toString() +'###'+ item.bookingDate.toString()].child || 0) 
-                                             + Number(item.child), 'adult': (scheduleIds[item.balloonSchedule.toString() +'###'+ item.bookingDate.toString()].adult || 0) 
-                                             + Number(item.adult)};
-    }
+ // Loop through orderItems and ensure uniqueness by merging duplicates
+ const uniqueItems = [];
+ for (const item of this.orderItems) {
+   // Check if an item with the same balloonSchedule and bookingDate already exists
+   let found = false;
 
-    // Set for unique schedules to avoid redundant checks
-    const checkSchedule = new Set();
-    for (const item of order.orderItems) {
-      const scheduleKey = item.balloonSchedule.toString() +'###'+ item.bookingDate.toString();
-      if (!checkSchedule.has(scheduleKey) && scheduleKey in scheduleIds) {
-        checkSchedule.add(scheduleKey);
-        item.child = scheduleIds[schedulekey].child;
-        item.adult = scheduleIds[schedulekey].adult;
+    // Compare item with existing items in uniqueItems
+      for (const uniqueItem of uniqueItems) {
+        if (
+          uniqueItem.balloonSchedule.toString() === item.balloonSchedule.toString() &&
+          new Date(uniqueItem.bookingDate).getFullYear() === new Date(item.bookingDate).getFullYear() &&
+          new Date(uniqueItem.bookingDate).getMonth() === new Date(item.bookingDate).getMonth() &&
+          new Date(uniqueItem.bookingDate).getDate() === new Date(item.bookingDate).getDate()
+        ) {
+          // If duplicate found, merge adult and child counts
+          uniqueItem.adult += item.adult;
+          uniqueItem.child += item.child;
+          found = true;
+          break;
+        }
+      }
+
+      // If no duplicate found, push the item to uniqueItems
+      if (!found) {
+        uniqueItems.push(item);
       }
     }
-
+    this.orderItems = uniqueItems;
+   
     // Push status change to history if 'status' was modified
     if (this.isModified('status')) {
       this.statusHistory.push({
@@ -95,6 +105,35 @@ orderSchema.pre('save', async function(next) {
 
     const finalAmount = await calculateTotalAmount();
     this.total = finalAmount >= 0 ? finalAmount : 0;
+     // add to dailybooking 
+    for(const item of this.orderItems) {
+      try {
+      const dailyBooking = await DailyBooking.findOne({ 'balloonSchedule': item.balloonSchedule ,'bookingDate': item.bookingDate});
+
+        if (dailyBooking) {
+          // Update bookedSeats for existing DailyBooking
+          dailyBooking.bookedSeats +=  item.child + item.adult;
+          await dailyBooking.save();
+        } else {
+          
+          // Create a new DailyBooking entry
+          const newDaily = new DailyBooking();
+          newDaily.balloonSchedule = item.balloonSchedule,
+          newDaily.bookingDate = item.bookingDate,
+          newDaily.bookedSeats =  item.child + item.adult;
+          await newDaily.save();
+          
+        }
+      } catch (error) {
+        if (error.isFull) {
+          // Stop further processing by passing this error to next()
+          return next(error);
+        }
+        // Re-throw if it's a different error
+        throw error;
+      }
+      }
+   
 
     next();
   } catch (error) {
@@ -103,123 +142,36 @@ orderSchema.pre('save', async function(next) {
   }
 });
 
-//post
-orderSchema.post('save', async function(doc, next) {
-  try {
-    const order = doc;
-
-    // Track seat bookings per schedule
-    const scheduleIds = {};
-    for (const item of order.orderItems) {
-      scheduleIds[item.balloonSchedule.toString() +'###'+ item.bookingDate.toString()] = (scheduleIds[item.balloonSchedule.toString() +'###'+ item.bookingDate.toString()] || 0) 
-                                            + Number(item.adult) + Number(item.child);
-    }
-
-    // Set for unique schedules to avoid redundant checks
-    const checkSchedule = new Set();
-    for (const item of order.orderItems) {
-      const scheduleKey = item.balloonSchedule.toString() +'###'+ item.bookingDate.toString();
-      if (!checkSchedule.has(scheduleKey) && scheduleKey in scheduleIds) {
-        checkSchedule.add(scheduleKey);
-
-        const dailyBooking = await DailyBooking.findOne({ 'balloonSchedule': item.balloonSchedule ,'bookingDate': item.bookingDate});
-
-        if (dailyBooking) {
-          // Update bookedSeats for existing DailyBooking
-          dailyBooking.bookedSeats += scheduleIds[scheduleKey];
-          await dailyBooking.save();
-        } else {
-          
-          // Create a new DailyBooking entry
-          const newDaily = new DailyBooking();
-          newDaily.balloonSchedule = item.balloonSchedule,
-          newDaily.bookingDate = item.bookingDate,
-          newDaily.bookedSeats = scheduleIds[scheduleKey]
-
-          await newDaily.save();
-          
-        }
-      }
-    }
-
-    next();
-  } catch (error) {
-    console.error("Error in order post-save middleware:", error);
-    next(error);
-  }
-});
-
-
-
-// orderSchema.pre('save', async function(next) {
-//   const order = this;
-
+// //post
+// orderSchema.post('save', async function(doc, next) {
 //   try {
-//     if (this.isNew) {
-//       const randomFourDigits = Math.floor(1000 + Math.random() * 9000); // number between 1000 and 9999
-//       this.orderNumber = `#${randomFourDigits}`;
-//       let scheduleIds = {};
-//       for (const item of this.orderItems){
-//         if(!(item.balloonSchedule in scheduleIds))
-//           scheduleIds[item.balloonSchedule] = Number(item.adult) + Number(item.child);
-//         else
-//           scheduleIds[item.balloonSchedule] += Number(item.adult) + Number(item.child);
-//       }
-//       let checkSchedule = [];
-//       for (const item of this.orderItems){
-//           if (!checkSchedule.includes(item.balloonSchedule.toString()) && (item.balloonSchedule in scheduleIds)){
-//             checkSchedule.push(item.balloonSchedule.toString());
-//             const dailyBooking = await DailyBooking.findOne({'balloonSchedule':item.balloonSchedule});
-//             if(dailyBooking) 
-//             {
-//               bookedSeats = Number(dailyBooking.get('bookedSeats'));
-//               const updateDailyBooking =  await DailyBooking.findById(dailyBooking.id);
-//               updateDailyBooking.bookedSeats = bookedSeats + scheduleIds[item.balloonSchedule];
-//               updateDailyBooking.save();
-//             }else{
-//               const newDailyBooking = new DailyBooking();
-//               newDailyBooking.balloonSchedule = item.balloonSchedule;
-//               newDailyBooking.bookingDate = item.bookingDate;
-//               newDailyBooking.bookedSeats = scheduleIds[item.balloonSchedule];
-//               newDailyBooking.save();
-//             }
+//     const order = doc;
+
+//     for(const item of order.orderItems) {
+    
+//       const dailyBooking = await DailyBooking.findOne({ 'balloonSchedule': item.balloonSchedule ,'bookingDate': item.bookingDate});
+
+//         if (dailyBooking) {
+//           // Update bookedSeats for existing DailyBooking
+//           dailyBooking.bookedSeats +=  item.child + item.adult;
+//           await dailyBooking.save();
+//         } else {
+          
+//           // Create a new DailyBooking entry
+//           const newDaily = new DailyBooking();
+//           newDaily.balloonSchedule = item.balloonSchedule,
+//           newDaily.bookingDate = item.bookingDate,
+//           newDaily.bookedSeats =  item.child + item.adult;
+//           await newDaily.save();
+          
 //         }
 //       }
-//     }
-//    if (this.isModified('status')) {
-//     // Only add to history if status was modified
-//     this.statusHistory.push({
-//       status: this.status,
-//       date: new Date(), // Automatically set the current date
-//       note: 'Status changed' // Optional: customize notes based on specific status changes
-//     });
-//   }
-
-//     const promotion = await Promotion.findOne({"code" : order.promotionCode })
-//     if (!promotion){
-//         // Calculate total amount
-//         const total = this.orderItems.reduce((acc, item) => acc + (item.totalPrice || 0), 0);
-//         const finalAmount = total;
-//         order.total = finalAmount >= 0 ? finalAmount : 0; // Ensure totalAmount is not negative
-
-//     }else{
-//       // Calculate total amount
-//       const total = this.orderItems.reduce((acc, item) => acc + (item.totalPrice || 0), 0);
-//       let finalAmount = 0; 
-//       if(promotion.status === 'Active' && promotion.start <= Date.now() && promotion.end >= Date.now()){ // start and end date check
-//         const finalDiscount = (total * promotion.discount) /100 
-//         finalAmount = total- finalDiscount;
-//       }else{
-//         finalAmount = total;
-//       }
-//       order.total = finalAmount >= 0 ? finalAmount : 0; // Ensure totalAmount is not negative
-//   }
 //     next();
 //   } catch (error) {
+//     console.error("Error in order post-save middleware:", error);
 //     next(error);
 //   }
 // });
-
 
 
 module.exports = mongoose.model('Order', orderSchema);

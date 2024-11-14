@@ -3,6 +3,8 @@ const Cart = require('../models/Cart');
 const Order = require('../models/Order');
 const isDocumentReferenced = require('../functions/isDocumentReferenced');
 const checkSeatAvailability = require('../functions/checkSeatAvailability');
+const checkSchedule = require('../functions/checkSchedule');
+
 const router = express.Router();
 
 // POST: Add items to cart
@@ -26,11 +28,26 @@ router.post('/', async (req, res) => {
       res.cookie('cart', cart, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true });
       return res.status(201).send({ message: 'Items added to cart cookie', cart });
     }
-
-    
-
+  
+    // add cookies for old cart for same user
+    const userCart = await Cart.findOne({'user':user});
+    if(userCart){
+      if(req.cookies.cart.length > 0)
+      {
+        // userCart.items.push(...req.cookies.cart);
+        for(const item of req.cookies.cart){
+          userCart.items = await checkSchedule(userCart.items,item);
+        }
+      }
+      for(const item of req.body.items){
+        userCart.items = await checkSchedule(userCart.items,item);
+      }
+      await userCart.save();
+    }else{
     const cart = new Cart(req.body);
-    await cart.save();
+    await cart.save()
+    }
+    ;
     res.status(201).send(cart);
   } catch (error) {
     res.status(500).send({ error: 'Failed to add items to cart', details: error.message });

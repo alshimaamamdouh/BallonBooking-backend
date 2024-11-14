@@ -36,7 +36,12 @@ connectDB();
 // Use Routes with API Url from .env
 const apiVersion = process.env.API_URL ;  
 
-
+app.use((error, req, res, next) => {
+  if (error.isFull) {
+    return res.status(400).json({ message: error.message });
+  }
+  res.status(500).json({ message: 'An unexpected error occurred.' });
+});
 
 app.use(`/${apiVersion}/company`, companyRoutes);
 app.use(`/${apiVersion}/service`, serviceRoutes);

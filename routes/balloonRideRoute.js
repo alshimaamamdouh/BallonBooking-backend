@@ -92,6 +92,28 @@ router.put('/:id', async (req, res) => {
   }
 });
 
+// PUT: Update a balloon ride by ID
+router.put('/image/:id', async (req, res) => {
+  try {
+    const public_ids = req.body.public_ids ? (Array.isArray(req.body.public_ids) ? req.body.public_ids : JSON.parse(req.body.public_ids)) : [];
+    const imageUrls = req.body.imageUrls ? (Array.isArray(req.body.imageUrls) ? req.body.imageUrls : JSON.parse(req.body.imageUrls)) : [];
+    const location  =  req.body.location ? JSON.parse(req.body.location) : {};
+      
+
+    // Update the balloon ride with new information
+    const updatedRide = await BalloonRide.findByIdAndUpdate(req.params.id, {
+      ...req.body,
+          location: location,
+          public_ids: public_ids,
+          imageUrls: imageUrls,   
+    }, { new: true }); 
+
+    res.status(200).json(updatedRide);
+  } catch (error) {
+    res.status(500).send({ error: 'Failed to update balloon ride', details: error.message });
+  }
+});
+
 
 // DELETE: Delete a balloon ride by ID
 router.delete('/:id', async (req, res) => {

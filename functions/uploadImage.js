@@ -19,7 +19,7 @@ const updateSingleImage = async (publicId, fileBuffer) => {
                 return;
             }
 
-            // upload new one
+            // upload new image
             const uploadStream = cloudinary.uploader.upload_stream(
                 { folder: 'uploads' },
                 (uploadError, uploadResult) => {

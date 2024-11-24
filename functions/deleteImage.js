@@ -8,7 +8,9 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET,
     timeout: 60000, // Set Cloudinary timeout to 60 seconds
 });
-const deleteImage = async (publicId) => {
+
+// single
+const deleteSingleImage = async (publicId) => {
     return new Promise((resolve, reject) => {
         cloudinary.uploader.destroy(publicId, (error, result) => {
             if (error) {
@@ -20,4 +22,24 @@ const deleteImage = async (publicId) => {
     });
 };
 
-module.exports = deleteImage;
+// multiple
+const deleteMultipleImages = async (publicIds) => {
+    const deletionPromises = publicIds.map(publicId => {
+        return new Promise((resolve, reject) => {
+            cloudinary.uploader.destroy(publicId, (error, result) => {
+                if (error) {
+                    reject({ message: 'Cloudinary deletion failed', error });
+                } else {
+                    resolve({ message: 'Image deleted successfully', result });
+                }
+            });
+        });
+    });
+
+    return await Promise.all(deletionPromises);
+};
+
+module.exports = {
+    deleteSingleImage,
+    deleteMultipleImages
+};

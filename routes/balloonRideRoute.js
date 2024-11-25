@@ -59,7 +59,7 @@ router.get('/', async (req, res) => {
 // GET: Get balloonride by ID
 router.get('/:id', async (req, res) => {
   try {
-    const balloonRide = await BalloonRide.findById(req.params.id);
+    const balloonRide = await BalloonRide.findById(req.params.id).populate('currency');
     if (!balloonRide) {
       return res.status(404).send({ error: 'BalloonRide not found' });
     }
